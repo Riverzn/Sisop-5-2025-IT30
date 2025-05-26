@@ -1,11 +1,12 @@
-# Sisop-5-2025-IT-Template
+# Sisop-5-2025-IT30
 
-## Kelompok
+## IT30 MEMBERS :
 
-Nama | NRP
---- | ---
-Amoes Noland | 5027231028
-Rafi' Afnaan Fathurrahman | 5027231040
+| No | Nama                              | NRP         |
+|----|-----------------------------------|------------|
+| 1  | Adiwidya Budi Pratama            | 5027241012 |
+| 2  | Ahmad Rafi Fadhillah Dwiputra     | 5027241068 |
+| 3  | Dimas Satya Andhika              | 5027241032 |
 
 ## Daftar Isi
 
