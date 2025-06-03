@@ -4,8 +4,9 @@
 
 Nama | NRP
 --- | ---
-Amoes Noland | 5027231028
-Rafi' Afnaan Fathurrahman | 5027231040
+Adiwidya Budi Pratama | 5027241012
+Dimas Satya Andhika | 5027241032
+Ahmad Rafi Fadhillah Dwiputra | 5027241068
 
 ## Daftar Isi
 
