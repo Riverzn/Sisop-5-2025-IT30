@@ -11,4 +11,9 @@ void printString(char* str);
 void readString(char* buf);
 void clearScreen();
 
+void setColor(byte color);
+byte getColor();
+
+extern byte currentColor;
+
 #endif // __KERNEL_H__
