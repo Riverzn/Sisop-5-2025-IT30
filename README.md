@@ -283,6 +283,217 @@ void clearScreen() {
 - Reset posisi kursor menggunakan `interrupt 0x10, AH=0x02` (set cursor position).
 
 ### shell.c
+ 1. Variabel Global
+```c
+char username[64] = "user";
+char companyTitle[16] = "";
+bool isGurtMode = false;
+
+char *yogurtResponses[] = {
+  "yo",
+  "ts unami gng </3",
+  "sygau"
+};
+```
+- `username`: Nama pengguna (default: `"user"`).
+- `companyTitle`: Grand Company (Maelstrom/Serpent/Flame); ditampilkan di prompt.
+- `isGurtMode`: Menandai apakah sedang di "gurt mode".
+- `yogurtResponses`: Array dari string balasan acak untuk perintah `yogurt`.
+---
+
+2. Fungsi `shell()`
+```c
+void shell() {
+  char buf[128];
+  char cmd[64];
+  char arg[2][64];
+```
+Inisialisasi:
+- `buf`: Menyimpan input dari user.
+- `cmd`: Kata pertama (nama perintah).
+- `arg`: Dua argumen setelah perintah.
+--- 
+
+3. Prompt dan Input
+```c
+printString("Welcome to EorzeOS!\r\n");
+while (true) {
+  if (isGurtMode) {
+    printString("gurt> ");
+  } else {
+    printString(username);
+    if (companyTitle[0] != '\0') {
+      printString("@");
+      printString(companyTitle);
+    }
+    printString("> ");
+  }
+
+  readString(buf);
+  parseCommand(buf, cmd, arg);
+```
+- Menampilkan prompt tergantung mode.
+- `readString()` membaca baris input dari keyboard.
+- `parseCommand()` memisah input menjadi `cmd`, `arg[0]`, dan `arg[1]`.
+---
+
+4. Pemrosesan Perintah
+#### `yo dan gurt`
+```c
+if (strcmp(cmd, "yo")) {
+  printString("gurt\r\n");
+} else if (strcmp(cmd, "gurt")) {
+  printString("yo\r\n");
+}
+```
+- Perintah `yo` → membalas "gurt"
+- Perintah `gurt` → membalas "yo"
+
+#### `user`
+```c
+else if (strcmp(cmd, "user")) {
+  if (arg[0][0] == '\0') {
+    strcpy(username, "user");
+  } else {
+    strcpy(username, arg[0]);
+  }
+  printString("Username changed to ...");
+}
+```
+- Ubah nama pengguna. Jika tidak diberi argumen, kembalikan ke `"user"`.
+
+#### `grandcompany`
+```c
+else if (strcmp(cmd, "grandcompany")) {
+  if (strcmp(arg[0], "maelstrom")) {
+    setColor(0x04); // merah
+    clearScreen();
+    strcpy(companyTitle, "Storm");
+  } else if (strcmp(arg[0], "twinadder")) {
+    setColor(0x0E); // kuning
+    clearScreen();
+    strcpy(companyTitle, "Serpent");
+  } else if (strcmp(arg[0], "immortalflames")) {
+    setColor(0x01); // biru
+    clearScreen();
+    strcpy(companyTitle, "Flame");
+  } else {
+    printString("Unknown Grand Company\r\n");
+  }
+  continue;
+}
+```
+- Menyetel afiliasi dengan Grand Company dan mengubah warna layar:
+    - `maelstrom` → merah
+    - `twinadder` → kuning
+    - `immortalflames` → biru
+
+#### `clear`
+```c
+else if (strcmp(cmd, "clear")) {
+  setColor(0x07); // putih
+  strcpy(companyTitle, "");
+  clearScreen();
+}
+```
+- Membersihkan layar dan mereset warna/prompt.
+---
+
+5. Operasi Matematika: add, sub, mul, div
+```c
+else if (strcmp(cmd, "add") || strcmp(cmd, "sub") || ...) {
+  atoi(arg[0], &a);
+  atoi(arg[1], &b);
+  ...
+  itoa(result, resultStr);
+  printString(resultStr);
+  printString("\r\n");
+}
+```
+- `atoi()` mengubah string ke integer.
+- `div()` untuk pembagian (fungsi dari `std_lib.c`)
+- `itoa()` mengubah hasil ke string.
+- Menangani pembagian nol!
+---
+
+6. `yogurt` acak
+```c
+else if (strcmp(cmd, "yogurt")) {
+  isGurtMode = true;
+  i = getBiosTick();
+  tick = mod((i * 17 + 73), 3);
+  ...
+  isGurtMode = false;
+  continue;
+}
+```
+- Masuk mode "gurt", tampilkan prompt, dan pilih salah satu respon acak dari `yogurtResponses[]` berdasarkan tick BIOS:
+    - `getBiosTick()` → baca waktu sistem
+    - `mod()` → fungsi modulo (di `std_lib.c`)
+---
+
+7. Fallback
+```c
+else {
+  printString(buf);
+  printString("\r\n");
+}
+```
+- Jika perintah tidak dikenali, ulangi inputnya sebagai output.
+---
+
+8. Deklarasi dan Reset Buffer
+```c
+int i = 0, j = 0, word = 0;
+
+clear(cmd, 64);
+clear(arg[0], 64);
+clear(arg[1], 64);
+```
+- `i` → indeks untuk membaca karakter input buf
+- `j` → indeks untuk menulis ke cmd/arg
+- `word` → menandai bagian mana dari input yang sedang ditulis:
+    - `0` → perintah utama
+    - `1` → argumen pertama
+    - `2` → argumen kedua
+- Semua buffer dibersihkan dulu (isi di-nul-kan).
+---
+
+9. Loop Pemrosesan Karakter
+```c
+while (buf[i] != '\0') {
+```
+Loop berjalan sampai akhir string (karakter null '\0').
+---
+
+10. Deteksi Spasi
+```c
+if (buf[i] == ' ') {
+  word++;  // pindah ke bagian selanjutnya
+  j = 0;   // reset penulisan
+  i++;
+  continue;
+}
+```
+- Saat menemui spasi, berarti kita pindah ke kata berikutnya (misal dari `cmd `ke `arg[0]`).
+- `j = 0` → mulai tulis dari awal lagi ke buffer berikutnya.
+---
+
+11. Simpan Karakter Sesuai Bagiannya
+```c
+if (word == 0 && j < 64) {
+  cmd[j++] = buf[i];
+} else if (word == 1 && j < 64) {
+  arg[0][j++] = buf[i];
+} else if (word == 2 && j < 64) {
+  arg[1][j++] = buf[i];
+}
+```
+- Karakter non-spasi disimpan sesuai `word`:
+    - `word == 0`: isi `cmd`
+    - `word == 1`: isi `arg[0]`
+    - `word == 2`: isi `arg[1]`
+- `j < 64` → agar tidak menulis melebihi batas buffer.
 
 ### std_lib.c
 
