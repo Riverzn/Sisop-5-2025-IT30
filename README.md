@@ -281,7 +281,7 @@ void clearScreen() {
 - Mengisi seluruh layar dengan spasi `' '` dan warna dari `currentColor`.
 - `putInMemory(segment, offset, value)` menulis langsung ke memori.
 - Reset posisi kursor menggunakan `interrupt 0x10, AH=0x02` (set cursor position).
-
+---
 ### shell.c
  1. Variabel Global
 ```c
@@ -494,8 +494,10 @@ if (word == 0 && j < 64) {
     - `word == 1`: isi `arg[0]`
     - `word == 2`: isi `arg[1]`
 - `j < 64` → agar tidak menulis melebihi batas buffer.
-
+---
 ### std_lib.c
 
+
+---
 ### makefile
 
