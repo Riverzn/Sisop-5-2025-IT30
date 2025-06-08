@@ -744,4 +744,116 @@ G.  Fungsi itoa – Angka ke String
 
 ---
 ### makefile
+A. Compiler dan Assembler
+
+- `AS=nasm`
+➡️ AS adalah assembler. Di sini, kita pakai nasm untuk file .asm.
+
+- `CC=bcc`
+➡️ CC adalah compiler C. Di sini, pakai bcc (Borland C Compiler).
+- LD=ld86
+➡️ LD adalah linker. ld86 dipakai untuk menggabungkan object file .o menjadi binary.
+
+- `CFLAGS=-ansi -c`
+➡️ -ansi: Gunakan standar ANSI C.
+➡️ -c: Compile saja, jangan link (hasilkan file .o).
+
+- `INCLUDES=-Iinclude/`
+➡️ Direktori header tambahan (misalnya include/std_lib.h).
+
+B. Direktori
+- `SRC_DIR=src
+BIN_DIR=bin`
+➡️ Lokasi source code (src/) dan output binary (bin/).
+```
+BOOTLOADER_SRC=$(SRC_DIR)/bootloader.asm
+KERNEL_C_SRC=$(SRC_DIR)/kernel.c
+KERNEL_ASM_SRC=$(SRC_DIR)/kernel.asm
+SHELL_SRC=$(SRC_DIR)/shell.c
+STDLIB_SRC=$(SRC_DIR)/std_lib.c
+```
+➡️ Path ke source file: bootloader, kernel, shell, dan library.
+```
+BOOTLOADER_BIN=$(BIN_DIR)/bootloader.bin
+KERNEL_BIN=$(BIN_DIR)/kernel.bin
+FLOPPY_IMG=$(BIN_DIR)/floppy.img
+```
+➡️ File output setelah build:
+
+Bootloader → bootloader.bin
+
+Kernel → kernel.bin
+
+Disk image → floppy.img
+
+C. Object Files
+```
+KERNEL_O=$(BIN_DIR)/kernel.o
+KERNEL_ASM_O=$(BIN_DIR)/kernel_asm.o
+SHELL_O=$(BIN_DIR)/shell.o
+STDLIB_O=$(BIN_DIR)/std_lib.o
+```
+➡️ Semua file .o hasil compile masing-masing modul.
+
+- `all: build`
+➡️ Target default saat jalankan make = akan menjalankan build.
+```
+prepare:
+	mkdir -p $(BIN_DIR)
+	dd if=/dev/zero of=$(FLOPPY_IMG) bs=512 count=2880
+```
+- ➡️ Persiapan:
+
+Buat folder bin jika belum ada.
+
+Buat floppy kosong 1.44 MB (2880 sektor × 512 byte).
+
+- ```
+  bootloader: $(BOOTLOADER_SRC)
+	$(AS) -f bin $(BOOTLOADER_SRC) -o $(BOOTLOADER_BIN)
+	dd if=bin/bootloader.bin of=bin/floppy.img bs=512 count=1 conv=notrunc
+  ```
+➡️ Assemble bootloader jadi .bin, lalu salin ke sektor pertama (MBR) dari floppy.
+
+
+- `stdlib: $(STDLIB_SRC)
+	$(CC) $(CFLAGS) $(STDLIB_SRC) -o $(STDLIB_O) $(INCLUDES)`
+➡️ Compile std_lib.c menjadi object file .o, dengan menyertakan folder header.
+- `shell: $(SHELL_SRC)
+	$(CC) $(CFLAGS) $(SHELL_SRC) -o $(SHELL_O) $(INCLUDES)`
+➡️ Compile shell.c menjadi object file .o.
+
+- ```
+  kernel: $(KERNEL_C_SRC) $(KERNEL_ASM_SRC)
+	$(AS) -f as86 $(KERNEL_ASM_SRC) -o $(KERNEL_ASM_O)
+	$(CC) $(CFLAGS) $(KERNEL_C_SRC) -o $(KERNEL_O) $(INCLUDES)`
+  ```
+➡️ Compile bagian kernel:
+  - Kernel ASM (.asm) → kernel_asm.o
+  - Kernel C (.c) → kernel.o
+- ```
+  link: $(BOOTLOADER_BIN) $(KERNEL_O) $(KERNEL_ASM_O) $(SHELL_O) $(STDLIB_O)
+	$(LD) -o $(KERNEL_BIN) -d $(KERNEL_O) $(KERNEL_ASM_O) $(SHELL_O) $(STDLIB_O)
+  ```
+➡️ Gabungkan semua object file jadi kernel.bin menggunakan ld86.
+
+- ```
+	dd if=$(BOOTLOADER_BIN) of=$(FLOPPY_IMG) bs=512 count=1 conv=notrunc
+	dd if=$(KERNEL_BIN) of=$(FLOPPY_IMG) bs=512 seek=1 conv=notrunc
+  ```
+➡️ Tulis bootloader.bin ke sektor 0, lalu tulis kernel.bin ke sektor selanjutnya (mulai sektor 1).
+
+- `build: prepare bootloader stdlib shell kernel link`
+➡️ Bangun seluruh sistem secara lengkap dari awal:
+  - Siapkan floppy
+  - Assemble bootloader
+  - Compile stdlib
+  - Compile shell
+  - Compile kernel
+  - Link dan gabungkan semua
+
+- `clean:
+	rm -f $(BIN_DIR)/*.o $(BIN_DIR)/*.bin $(BIN_DIR)/*.img`
+➡️ Hapus semua file hasil compile/link untuk bersih-bersih (reset build).
+
 
