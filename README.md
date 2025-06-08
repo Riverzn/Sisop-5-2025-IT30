@@ -179,5 +179,15 @@ https://github.com/user-attachments/assets/1cfa66b1-b2f5-4e3e-a4b2-ec8b012f6fbb
 
 
 ## Laporan
+## kernel.c
+</div>
 
-> Isi sesuai pengerjaan.
+
+## shell.c
+</div>
+
+## std_lib.c
+</div>
+
+## makefile
+</div>
