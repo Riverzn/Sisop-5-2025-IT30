@@ -179,19 +179,112 @@ https://github.com/user-attachments/assets/1cfa66b1-b2f5-4e3e-a4b2-ec8b012f6fbb
 
 
 ## Laporan
-
 ### kernel.c
+ 1. Fungsi main()
+```c
+int main() {
+  clearScreen();
+  shell();
+}
+```
+- Fungsi `clearScreen()` dipanggil untuk menghapus semua isi layar saat program dijalankan.
+- Fungsi `shell()` adalah sebuah loop atau program utama shell, yang tidak ditampilkan di sini, tapi diasumsikan sebagai antarmuka baris perintah tempat pengguna bisa mengetik perintah.
+ ---
 
+2. Variabel Global `currentColor`
+```c
+byte currentColor = 0x07;
+```
+- byte adalah alias dari unsigned char, digunakan untuk mewakili 8-bit data.
+- 0x07 adalah warna default: putih di latar belakang hitam (atribut teks untuk mode teks di VGA):
+    - Format warna: 0x[background][foreground]
+    - 0x07 = black background (0) + light gray/white foreground (7)
+---
 
+3. Fungsi `setColor()` dan `getColor()`
+```c
+void setColor(byte color) {
+  currentColor = color;
+}
 
+byte getColor() {
+  return currentColor;
+}
+```
+- `setColor()` memungkinkan perubahan warna teks.
+- `getColor()` mengembalikan warna saat ini.
+- Warna ini digunakan dalam `printString()` dan `clearScreen()` untuk menentukan warna karakter yang ditampilkan.
+---
+
+4. Fungsi `printString()`
+```c
+void printString(char *str) {
+  int i = 0;
+  while (str[i] != '\0') {
+    interrupt(0x10, 0x0E00 + str[i], 0x0001 | (currentColor << 8), 0, 0);
+    i++;
+  }
+}
+```
+- Fungsi ini mencetak string karakter demi karakter ke layar.
+- Menggunakan BIOS Interrupt `0x10` dengan fungsi `AH=0x0E` (teletype output):
+    - `0x0E00 + str[i]` → AH=0x0E dan AL=str[i]
+    - `currentColor << 8` → memberi atribut warna untuk karakter
+- `interrupt(...)` adalah wrapper untuk inline interrupt call BIOS (mungkin disediakan oleh lingkungan OS mini).
+- Tidak otomatis menggeser baris saat penuh – fitur seperti ini harus ditambahkan secara manual.
+---
+
+5. Fungsi  `readString()`
+```c
+void readString(char *buf) {
+  int i = 0;
+  char c = 0;
+  while (1) {
+    c = interrupt(0x16, 0x0000, 0, 0, 0); // Read char from keyboard
+    if (c == 0x0D) { // Enter
+      break;
+    } else if (c == 0x08 && i > 0) { // Backspace
+      i--;
+      printString("\b \b"); // Menghapus karakter terakhir
+    } else if (c >= 32 && c <= 126 && i < 127) { // Karakter valid ASCII
+      buf[i++] = c;
+      interrupt(0x10, 0x0E00 + c, 0x0001 | (currentColor << 8), 0, 0); // Echo char
+    }
+  }
+  buf[i] = '\0';
+  printString("\r\n"); // Pindah ke baris baru
+}
+```
+- Fungsi ini membaca karakter dari keyboard menggunakan BIOS interrupt `0x16`(keyboard input).
+- Memroses:
+    - Enter (0x0D): selesai input
+    - Backspace (0x08): hapus karakter sebelumnya
+    - Karakter printable (ASCII 32–126): simpan dan tampilkan
+- Disimpan di `buf`, kemudian diterminasi dengan \0 (akhir string).
+---
+
+6. Fungsi clearScreen()
+```c
+void clearScreen() {
+  int i;
+  for (i = 0; i < 80 * 25; i++) {
+    putInMemory(0xB800, i * 2, ' '); // karakter kosong
+    putInMemory(0xB800, i * 2 + 1, currentColor); // warna untuk karakter
+  }
+
+  // Reset posisi kursor ke baris 0, kolom 0
+  interrupt(0x10, 0x0200, 0, 0, 0);
+}
+```
+- Layar teks di mode VGA 80x25 disimpan di memori video `0xB800`.
+    - Setiap karakter terdiri dari 2 byte: [karakter][atribut warna]
+- Mengisi seluruh layar dengan spasi `' '` dan warna dari `currentColor`.
+- `putInMemory(segment, offset, value)` menulis langsung ke memori.
+- Reset posisi kursor menggunakan `interrupt 0x10, AH=0x02` (set cursor position).
 
 ### shell.c
 
-
-
-
 ### std_lib.c
-
 
 ### makefile
 
