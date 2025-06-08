@@ -496,7 +496,251 @@ if (word == 0 && j < 64) {
 - `j < 64` → agar tidak menulis melebihi batas buffer.
 ---
 ### std_lib.c
+- `#include "std_lib.h"`
+➡️ Mengimpor header std_lib.h yang berisi:
+  - Definisi fungsi (div, mod, dll)
+  - Tipe data seperti byte, bool, dan true/false.
 
+A.  Fungsi Div(Pembagian)
+  ```
+  int div(int a, int b) {
+  int result, sign;
+  result = 0;
+  sign = 1;
+  if (b == 0) return 0;
+
+  if (a < 0) {
+    a = -a;
+    sign *= -1;
+  }
+  if (b < 0) {
+    b = -b;
+    sign *= -1;
+  }
+
+  while (a >= b) {
+    a -= b;
+    result++;
+  }
+
+  return result * sign;
+  }
+  ```
+- `int div(int a, int b) {`
+➡️ Deklarasi fungsi div, menerima dua int, kembalikan hasil pembagian a / b.
+
+- `int result, sign;`
+➡️ result menyimpan hasil akhir. sign menyimpan tanda hasil (positif/negatif).
+
+- `result = 0;
+  sign = 1;`
+➡️ Inisialisasi result ke 0 dan sign ke positif (1).
+
+- `if (b == 0) return 0;`
+➡️ Cek pembagi 0 (error), kembalikan 0 untuk menghindari crash.
+
+   `if (a < 0) {
+    a = -a;
+    sign *= -1;
+  }`
+➡️ Ubah a jadi positif, dan ubah sign jika a negatif.
+
+- `if (b < 0) {
+    b = -b;
+    sign *= -1;
+  }`
+➡️ Ubah b jadi positif, dan ubah sign jika b negatif.
+
+- `while (a >= b) {
+    a -= b;
+    result++;
+  }`
+➡️ Kurangi a terus dengan b dan hitung berapa kali bisa dilakukan = hasil bagi.
+
+- `return result * sign;
+}`
+➡️ Kembalikan hasil akhir (result) dengan tanda (sign).
+
+B.  Fungsi mod – Sisa Pembagian
+```
+int mod(int a, int b) {
+  int sign;
+  if (b == 0) return 0;
+  sign = (a < 0) ? -1 : 1;
+
+  if (a < 0) a = -a;
+  if (b < 0) b = -b;
+
+  while (a >= b) {
+    a -= b;
+  }
+
+  return a * sign;
+}
+```
+- `int mod(int a, int b) {`
+➡️ Deklarasi fungsi mod, menghitung a % b.
+
+- `int sign;
+  if (b == 0) return 0;`
+➡️ Jika b == 0, langsung return 0 (hindari crash).
+
+- `sign = (a < 0) ? -1 : 1;`
+➡️ Simpan tanda dari a untuk hasil akhir (-1 jika negatif, 1 jika positif).
+
+- `if (a < 0) a = -a;
+  if (b < 0) b = -b;`
+➡️ Ubah a dan b jadi positif.
+
+- `while (a >= b) {
+    a -= b;
+  }`
+➡️ Kurangi a dengan b sampai tak bisa lagi = sisa pembagian.
+
+- `return a * sign;
+}`
+➡️ Kembalikan sisa pembagian (a) sesuai tanda asli.
+
+C. Fungsi strcmp – Bandingkan String
+```
+bool strcmp(char *str1, char *str2) {
+  int i = 0;
+  while (str1[i] != '\0' && str2[i] != '\0') {
+    if (str1[i] != str2[i]) {
+      return false;
+    }
+    i++;
+  }
+  return str1[i] == str2[i];
+}
+```
+- `bool strcmp(char *str1, char *str2) {`
+➡️ Membandingkan dua string karakter demi karakter.
+- `while (str1[i] != '\0' && str2[i] != '\0') {`
+➡️ Loop selama kedua string belum mencapai akhir (\0).
+- `if (str1[i] != str2[i]) {
+      return false;
+    }`
+➡️ Jika ada karakter berbeda, return false.
+
+- `i++;
+  }`
+➡️ Lanjut ke karakter selanjutnya.
+- `return str1[i] == str2[i];
+}`
+➡️ Jika satu string selesai tapi yang lain belum, return false. Kalau dua-duanya selesai bersamaan (\0), return true.
+
+D. Fungsi strcpy – Salin String
+```
+void strcpy(char *dst, char *src) {
+  int i = 0;
+  while (src[i] != '\0') {
+    dst[i] = src[i];
+    i++;
+  }
+  dst[i] = '\0';
+}
+
+void clear(byte *buf, unsigned int size) {
+  unsigned int i;
+  for (i = 0; i < size; i++) {
+    buf[i] = 0;
+  }
+}
+```
+- `void strcpy(char *dst, char *src) {`
+➡️ Menyalin isi src ke dst.
+- `int i = 0;
+  while (src[i] != '\0') {
+    dst[i] = src[i];
+    i++;
+  }`
+➡️ Salin karakter satu per satu sampai akhir (\0).
+
+- `dst[i] = '\0';
+}`
+➡️ Tambahkan null terminator di akhir dst.
+
+E. Fungsi clear – Set Buffer ke 0
+
+- `void clear(byte *buf, unsigned int size) {`
+➡️ Mengisi array buf sepanjang size dengan 0.
+- `unsigned int i;
+  for (i = 0; i < size; i++) {
+    buf[i] = 0;
+  }
+}`
+➡️ Loop dari 0 ke size-1, dan set setiap elemen buffer ke 0.
+
+F. Fungsi atoi – String ke Angka
+
+- `void atoi(char *str, int *num) {`
+➡️ Mengubah string angka ke integer (misal: "123" → 123).
+
+- `int i, result, sign;
+  i = 0;
+  result = 0;
+  sign = 1;`
+➡️ Inisialisasi index, hasil, dan tanda (positif).
+
+- `if (str[0] == '-') {
+    sign = -1;
+    i++;
+  }`
+➡️ Jika string diawali -, set sign jadi negatif.
+
+- `while (str[i] >= '0' && str[i] <= '9') {
+    result = result * 10 + (str[i] - '0');
+    i++;
+  }`
+➡️ Ambil digit satu per satu dan tambahkan ke result.
+
+- `*num = result * sign;
+}`
+➡️ Simpan hasil konversi ke variabel num.
+
+G.  Fungsi itoa – Angka ke String
+
+- `void itoa(int num, char *str) {`
+➡️ Mengubah int menjadi string (misal: 123 → "123").
+- `int i, j, sign;
+  char temp;
+  i = 0;
+  sign = 0;`
+➡️ Inisialisasi index i, indeks loop balik j, dan sign (0 artinya positif).
+
+- `if (num == 0) {
+    str[i++] = '0';
+    str[i] = '\0';
+    return;
+  }`
+➡️ Penanganan khusus jika num == 0.
+
+- `if (num < 0) {
+    sign = 1;
+    num = -num;
+  }`
+➡️ Jika negatif, simpan tanda dan ubah ke positif.
+
+- `while (num > 0) {
+    str[i++] = mod(num, 10) + '0';
+    num = div(num, 10);
+  }`
+➡️ Ambil digit terakhir (mod 10) dan simpan ke str.
+
+- `if (sign) str[i++] = '-';`
+➡️ Tambahkan tanda minus jika perlu.
+
+- `str[i] = '\0';`
+➡️ Tambahkan null terminator di akhir string.
+
+- `for (j = 0; j < i / 2; j++) {
+    temp = str[j];
+    str[j] = str[i - j - 1];
+    str[i - j - 1] = temp;
+  }
+}`
+➡️ Balik string (123 awalnya tersimpan sebagai "321" → dibalik).
 
 ---
 ### makefile
