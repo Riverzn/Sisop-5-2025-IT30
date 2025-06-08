@@ -261,9 +261,8 @@ void readString(char *buf) {
     - Backspace (0x08): hapus karakter sebelumnya
     - Karakter printable (ASCII 32–126): simpan dan tampilkan
 - Disimpan di `buf`, kemudian diterminasi dengan \0 (akhir string).
----
 
-6. Fungsi clearScreen()
+6. Fungsi `clearScreen()`
 ```c
 void clearScreen() {
   int i;
